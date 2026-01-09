@@ -61,20 +61,4 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Language.LSP.Test.Notebook.Types
-  - Language.LSP.Test.Notebook.Session
-  - Language.LSP.Test.Notebook.Hover
-  - Language.LSP.Test.Notebook.Diagnostics
-  - Language.LSP.Test.Notebook.Util
-
-executables:
-  cpp-example:
-    main: Main.hs
-    source-dirs: examples/cpp-example
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - lsp-test-notebook
-    other-modules: []
+  - Language.LSP.Test.Notebook

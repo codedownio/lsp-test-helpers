@@ -18,12 +18,12 @@ extra-source-files:
 
 library
   exposed-modules:
-      Language.LSP.Test.Notebook.Types
-      Language.LSP.Test.Notebook.Session
-      Language.LSP.Test.Notebook.Hover
-      Language.LSP.Test.Notebook.Diagnostics
-      Language.LSP.Test.Notebook.Util
+      Language.LSP.Test.Notebook
   other-modules:
+      Language.LSP.Test.Notebook.Diagnostics
+      Language.LSP.Test.Notebook.Hover
+      Language.LSP.Test.Notebook.Types
+      Language.LSP.Test.Notebook.Util
       Paths_lsp_test_notebook
   hs-source-dirs:
       src
@@ -58,55 +58,6 @@ library
     , filepath
     , lens
     , lsp-test >=0.15
-    , lsp-types >=2.0
-    , monad-control
-    , monad-logger
-    , mtl
-    , process
-    , sandwich >=0.1
-    , string-interpolate
-    , temporary
-    , text
-    , unliftio
-    , unliftio-core
-  default-language: Haskell2010
-
-executable cpp-example
-  main-is: Main.hs
-  hs-source-dirs:
-      examples/cpp-example
-  default-extensions:
-      OverloadedStrings
-      QuasiQuotes
-      NamedFieldPuns
-      RecordWildCards
-      ScopedTypeVariables
-      FlexibleContexts
-      FlexibleInstances
-      LambdaCase
-      ViewPatterns
-      MultiWayIf
-      TupleSections
-      NumericUnderscores
-      TypeApplications
-      GeneralizedNewtypeDeriving
-      DataKinds
-      TypeOperators
-      ConstraintKinds
-  ghc-options: -Wall -Wunused-packages -fno-warn-name-shadowing -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      aeson
-    , async
-    , base >=4.7 && <5
-    , bytestring
-    , containers
-    , data-default
-    , directory
-    , exceptions
-    , filepath
-    , lens
-    , lsp-test >=0.15
-    , lsp-test-notebook
     , lsp-types >=2.0
     , monad-control
     , monad-logger
