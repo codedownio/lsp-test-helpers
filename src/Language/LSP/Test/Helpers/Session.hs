@@ -93,6 +93,7 @@ withLspSession (LspSessionOptions {..}) session = do
 
   runSessionWithConfigCustomProcess modifyCp sessionConfig cp caps homeDir $ session $ LspSessionInfo {
     lspSessionInfoHomeDir = homeDir
+    , lspSessionInfoFileName = lspSessionOptionsInitialFileName
     }
 
 handleSessionException :: MonadUnliftIO m => ExampleT ctx m a -> ExampleT ctx m a
