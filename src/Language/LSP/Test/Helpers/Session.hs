@@ -25,7 +25,7 @@ import UnliftIO.Process
 
 withLspSession :: (
   LspContext ctx m
-  ) => LspSessionOptions -> (FilePath -> Session (ExampleT ctx m) a) -> ExampleT ctx m a
+  ) => LspSessionOptions -> (LspSessionInfo -> Session (ExampleT ctx m) a) -> ExampleT ctx m a
 withLspSession (LspSessionOptions {..}) session = do
   Just currentFolder <- getCurrentFolder
 
@@ -42,13 +42,17 @@ withLspSession (LspSessionOptions {..}) session = do
   -- Comment this and use openDoc' to simulate an unsaved document
   liftIO $ T.writeFile (homeDir </> lspSessionOptionsInitialFileName) lspSessionOptionsInitialCode
 
-  let sessionConfig = def { lspConfig = fromMaybe mempty (lspConfigInitializationOptions lspSessionOptionsConfig)
-                          , logStdErr = True
-                          , logMessages = True
-                          , messageTimeout = 120
-                          }
+  let sessionConfig = def {
+        lspConfig = fromMaybe mempty (lspConfigInitializationOptions lspSessionOptionsConfig)
+        , logStdErr = True
+        , logMessages = True
+        , messageTimeout = 120
+        }
 
-  let cmd:args = fmap T.unpack $ lspConfigArgs lspSessionOptionsConfig
+  cmd:args <- case fmap T.unpack $ lspConfigArgs lspSessionOptionsConfig of
+    (x:xs) -> pure (x:xs)
+    [] -> expectationFailure [i|LSP args were empty|]
+
   (cp, modifyCp) <- getContext maybeBubblewrap >>= \case
     Nothing -> do
       let configEnv = maybe mempty (fmap (bimap T.unpack T.unpack) . M.toList) (lspConfigEnv lspSessionOptionsConfig)
@@ -87,7 +91,9 @@ withLspSession (LspSessionOptions {..}) session = do
            & set (workspace . _Just . didChangeConfiguration . _Just . dynamicRegistration) (Just False)
            & set (textDocument . _Just . semanticTokens . _Just . dynamicRegistration) (Just False)
 
-  runSessionWithConfigCustomProcess modifyCp sessionConfig cp caps homeDir (session homeDir)
+  runSessionWithConfigCustomProcess modifyCp sessionConfig cp caps homeDir $ session $ LspSessionInfo {
+    lspSessionInfoHomeDir = homeDir
+    }
 
 handleSessionException :: MonadUnliftIO m => ExampleT ctx m a -> ExampleT ctx m a
 handleSessionException = handle (\(e :: SessionException) -> expectationFailure [i|LSP session failed with SessionException: #{e}|])

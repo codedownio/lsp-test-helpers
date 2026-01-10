@@ -87,3 +87,7 @@ defaultLspSessionOptions config = LspSessionOptions {
   , lspSessionOptionsInitialCode = ""
   , lspSessionOptionsExtraFiles = []
   }
+
+data LspSessionInfo = LspSessionInfo {
+  lspSessionInfoHomeDir :: FilePath
+  }

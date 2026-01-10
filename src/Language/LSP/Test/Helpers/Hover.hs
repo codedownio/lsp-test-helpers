@@ -1,11 +1,13 @@
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 module Language.LSP.Test.Helpers.Hover where
 
 import Control.Applicative (Alternative)
 import Control.Lens ((^.))
 import Control.Monad
-import Control.Monad.IO.Unlift
 import Control.Monad.Catch (MonadThrow)
-import Control.Monad.Trans (lift)
+import Control.Monad.IO.Unlift
+import Control.Monad.Logger
 import Data.String.Interpolate
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -13,10 +15,7 @@ import Language.LSP.Protocol.Lens as LSP hiding (hover)
 import Language.LSP.Protocol.Types
 import Language.LSP.Test
 import Test.Sandwich as Sandwich
-import UnliftIO.Exception
 
--- Re-export getHoverOrException from codedown-languages
--- Note: Use getHover from Language.LSP.Test and handle Nothing case manually
 
 -- | Extract all text from hover contents
 allHoverText :: Hover -> Text
@@ -43,7 +42,7 @@ hoverShouldContainAll hover expectedTexts = do
     hoverText `shouldContainText` expected
 
 -- | Assert that hover text contains any of the specified substrings
-hoverShouldContainAny :: MonadIO m => Hover -> [Text] -> m ()  
+hoverShouldContainAny :: MonadIO m => Hover -> [Text] -> m ()
 hoverShouldContainAny hover expectedTexts = do
   let hoverText = allHoverText hover
   unless (any (`T.isInfixOf` hoverText) expectedTexts) $
@@ -58,6 +57,13 @@ containsAll haystack = all (`T.isInfixOf` haystack)
 
 -- | Helper function for text assertion
 shouldContainText :: MonadIO m => Text -> Text -> m ()
-shouldContainText haystack needle = 
+shouldContainText haystack needle =
   unless (needle `T.isInfixOf` haystack) $
     liftIO $ expectationFailure [i|Expected text to contain '#{needle}', but got: '#{haystack}'|]
+
+getHoverOrException :: (
+  MonadLoggerIO m, MonadThrow m, MonadUnliftIO m, Alternative m
+  ) => TextDocumentIdentifier -> Position -> Session m Hover
+getHoverOrException tdi pos = getHover tdi pos >>= \case
+  Nothing -> expectationFailure [i|No hover returned.|]
+  Just x -> return x

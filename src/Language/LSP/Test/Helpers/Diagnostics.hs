@@ -1,9 +1,13 @@
+
 module Language.LSP.Test.Helpers.Diagnostics where
 
+import Control.Lens
 import Control.Monad
 import Data.Function (fix)
 import Data.String.Interpolate
-import Language.LSP.Protocol.Types
+import Data.Text (Text)
+import Language.LSP.Protocol.Lens as LSP
+import Language.LSP.Protocol.Types as LSP
 import Language.LSP.Test
 import Language.LSP.Test.Helpers.Session
 import Language.LSP.Test.Helpers.Types
@@ -31,7 +35,7 @@ import UnliftIO.STM
 testDiagnosticsLabelDesired :: (
   LspContext ctx m
   ) => LspSessionOptions -> String -> ([Diagnostic] -> Bool) -> SpecFree ctx m ()
-testDiagnosticsLabelDesired lspSessionOptions label cb = it label $
+testDiagnosticsLabelDesired lspSessionOptions label' cb = it label' $
   testDiagnostics lspSessionOptions $ \diags ->
     if | cb diags -> return True
        | otherwise -> expectationFailure [i|Got unexpected diagnostics: #{diags}|]
@@ -63,3 +67,9 @@ testDiagnostics' timeoutSeconds lspSessionOptions cb = do
                 when (x == lastValue) retrySTM
                 return x
               loop newDiags
+
+getDiagnosticRanges :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text))]
+getDiagnosticRanges = fmap (\x -> (x ^. range, x ^. code))
+
+getDiagnosticRanges' :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text), Text)]
+getDiagnosticRanges' = fmap (\x -> (x ^. range, x ^. code, x ^. LSP.message))
