@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Language.LSP.Test.Notebook.Types where
+module Language.LSP.Test.Helpers.Types where
 
 import Control.Applicative (Alternative)
 import Control.Monad.Catch (MonadCatch, MonadMask, MonadThrow)
@@ -14,7 +14,7 @@ import Data.Map (Map)
 import qualified Data.Set as S
 import Data.Text (Text)
 import Language.LSP.Protocol.Types
-import Language.LSP.Test.Notebook.Util.Aeson
+import Language.LSP.Test.Helpers.Util.Aeson
 import Test.Sandwich as Sandwich
 
 

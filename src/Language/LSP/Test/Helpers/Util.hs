@@ -1,4 +1,4 @@
-module Language.LSP.Test.Notebook.Util where
+module Language.LSP.Test.Helpers.Util where
 
 import Control.Monad (when, unless)
 import Control.Monad.IO.Unlift

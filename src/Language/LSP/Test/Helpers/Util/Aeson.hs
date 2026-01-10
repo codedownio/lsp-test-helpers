@@ -1,5 +1,5 @@
 
-module Language.LSP.Test.Notebook.Util.Aeson where
+module Language.LSP.Test.Helpers.Util.Aeson where
 
 import Data.Aeson as A
 import Data.Char (isUpper, toLower, toUpper)

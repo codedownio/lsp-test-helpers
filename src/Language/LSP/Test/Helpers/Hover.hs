@@ -1,4 +1,4 @@
-module Language.LSP.Test.Notebook.Hover where
+module Language.LSP.Test.Helpers.Hover where
 
 import Control.Applicative (Alternative)
 import Control.Lens ((^.))

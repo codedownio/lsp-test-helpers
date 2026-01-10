@@ -1,12 +1,12 @@
-module Language.LSP.Test.Notebook.Diagnostics where
+module Language.LSP.Test.Helpers.Diagnostics where
 
 import Control.Monad
 import Data.Function (fix)
 import Data.String.Interpolate
 import Language.LSP.Protocol.Types
 import Language.LSP.Test
-import Language.LSP.Test.Notebook.Session
-import Language.LSP.Test.Notebook.Types
+import Language.LSP.Test.Helpers.Session
+import Language.LSP.Test.Helpers.Types
 import Test.Sandwich as Sandwich
 import Test.Sandwich.Waits
 import UnliftIO.Async

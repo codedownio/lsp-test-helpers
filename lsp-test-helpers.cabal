@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           lsp-test-notebook
+name:           lsp-test-helpers
 version:        0.1.0.0
 synopsis:       LSP testing utilities for notebook-style language servers
 description:    A library providing utilities for end-to-end testing of LSP language servers, with special support for notebook-style code transformations.
@@ -18,15 +18,15 @@ extra-source-files:
 
 library
   exposed-modules:
-      Language.LSP.Test.Notebook
+      Language.LSP.Test.Helpers
   other-modules:
-      Language.LSP.Test.Notebook.Diagnostics
-      Language.LSP.Test.Notebook.Hover
-      Language.LSP.Test.Notebook.Session
-      Language.LSP.Test.Notebook.Types
-      Language.LSP.Test.Notebook.Util
-      Language.LSP.Test.Notebook.Util.Aeson
-      Paths_lsp_test_notebook
+      Language.LSP.Test.Helpers.Diagnostics
+      Language.LSP.Test.Helpers.Hover
+      Language.LSP.Test.Helpers.Session
+      Language.LSP.Test.Helpers.Types
+      Language.LSP.Test.Helpers.Util
+      Language.LSP.Test.Helpers.Util.Aeson
+      Paths_lsp_test_helpers
   hs-source-dirs:
       src
   default-extensions:

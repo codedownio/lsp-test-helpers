@@ -1,5 +1,5 @@
 
-module Language.LSP.Test.Notebook.Session where
+module Language.LSP.Test.Helpers.Session where
 
 import Control.Lens hiding (List)
 import Control.Monad
@@ -14,7 +14,7 @@ import qualified Data.Text.IO as T
 import Language.LSP.Protocol.Capabilities
 import Language.LSP.Protocol.Lens as LSP hiding (diagnostics, hover, id, label, name, ranges)
 import Language.LSP.Test
-import Language.LSP.Test.Notebook.Types
+import Language.LSP.Test.Helpers.Types
 import System.FilePath
 import System.IO.Temp (createTempDirectory)
 import Test.Sandwich as Sandwich

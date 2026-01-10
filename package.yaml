@@ -1,4 +1,4 @@
-name:                lsp-test-notebook
+name:                lsp-test-helpers
 version:             0.1.0.0
 license:             MIT
 author:              "Tom McLaughlin"
@@ -61,4 +61,4 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Language.LSP.Test.Notebook
+  - Language.LSP.Test.Helpers
