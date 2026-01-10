@@ -22,8 +22,10 @@ library
   other-modules:
       Language.LSP.Test.Notebook.Diagnostics
       Language.LSP.Test.Notebook.Hover
+      Language.LSP.Test.Notebook.Session
       Language.LSP.Test.Notebook.Types
       Language.LSP.Test.Notebook.Util
+      Language.LSP.Test.Notebook.Util.Aeson
       Paths_lsp_test_notebook
   hs-source-dirs:
       src

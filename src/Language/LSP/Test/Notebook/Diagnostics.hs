@@ -1,84 +1,65 @@
 module Language.LSP.Test.Notebook.Diagnostics where
 
-import Control.Lens ((^.))
-import Control.Applicative (Alternative)
 import Control.Monad
-import Control.Monad.IO.Unlift
-import Control.Monad.Trans (lift)
-import Data.Aeson as A
-import qualified Data.ByteString as B
-import Data.Maybe
+import Data.Function (fix)
 import Data.String.Interpolate
-import Data.Text (Text)
-import GHC.Int
-import GHC.Stack
-import Language.LSP.Protocol.Lens as LSP hiding (diagnostics)
 import Language.LSP.Protocol.Types
 import Language.LSP.Test
+import Language.LSP.Test.Notebook.Session
+import Language.LSP.Test.Notebook.Types
 import Test.Sandwich as Sandwich
+import Test.Sandwich.Waits
 import UnliftIO.Async
-import UnliftIO.Exception
-import UnliftIO.IORef
 import UnliftIO.STM
 
--- | Simple waitUntil implementation
-waitUntil :: MonadIO m => Double -> m a -> m a
-waitUntil _timeoutSeconds action = action -- Simplified for now
 
--- | Assert that diagnostics match expected ranges and codes
-assertDiagnosticRanges :: (HasCallStack, MonadIO m) => [Diagnostic] -> [(Range, Maybe (Int32 |? Text))] -> m ()
-assertDiagnosticRanges diagnostics desired = if
-  | found == desired -> return ()
-  | otherwise ->
-      liftIO $ expectationFailure [__i|Got wrong diagnostics!
+-- testDiagnostics :: (
+--   LspContext ctx m, HasNixEnvironment ctx
+--   ) => Text -> FilePath -> Maybe LanguageKind -> Text -> ([Diagnostic] -> ExampleT ctx m ()) -> SpecFree ctx m ()
+-- testDiagnostics name filename maybeLanguageId codeToTest = testDiagnostics' name filename maybeLanguageId codeToTest []
 
-                              Expected: #{A.encode desired}
+-- testDiagnostics' :: (
+--   LspContext ctx m, HasNixEnvironment ctx
+--   ) => Text -> FilePath -> Maybe LanguageKind -> Text -> [(FilePath, B.ByteString)] -> ([Diagnostic] -> ExampleT ctx m ()) -> SpecFree ctx m ()
+-- testDiagnostics' name filename maybeLanguageId codeToTest = testDiagnostics'' [i|#{name}, #{filename} with #{show codeToTest} (diagnostics)|] name filename maybeLanguageId codeToTest
 
-                              Found: #{A.encode found}
-                             |]
-  where
-    found = getDiagnosticRanges diagnostics
+-- testDiagnosticsLabel :: (
+--   LspContext ctx m, HasNixEnvironment ctx
+--   ) => String -> Text -> FilePath -> Maybe LanguageKind -> Text -> ([Diagnostic] -> ExampleT ctx m ()) -> SpecFree ctx m ()
+-- testDiagnosticsLabel label name filename maybeLanguageId codeToTest = testDiagnostics'' label name filename maybeLanguageId codeToTest []
 
--- | Extract diagnostic ranges and codes
-getDiagnosticRanges :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text))]
-getDiagnosticRanges = fmap (\x -> (x ^. range, x ^. code))
+testDiagnosticsLabelDesired :: (
+  LspContext ctx m
+  ) => LspSessionOptions -> String -> ([Diagnostic] -> Bool) -> SpecFree ctx m ()
+testDiagnosticsLabelDesired lspSessionOptions label cb = it label $
+  testDiagnostics lspSessionOptions $ \diags ->
+    if | cb diags -> return True
+       | otherwise -> expectationFailure [i|Got unexpected diagnostics: #{diags}|]
 
--- | Assert diagnostics with ranges, codes, and messages
-assertDiagnosticRanges' :: (HasCallStack, MonadIO m) => [Diagnostic] -> [(Range, Maybe (Int32 |? Text), Text)] -> m ()
-assertDiagnosticRanges' diagnostics desired = if
-  | found == desired -> return ()
-  | otherwise ->
-      liftIO $ expectationFailure [__i|Got wrong diagnostics!
+testDiagnostics :: (
+  LspContext ctx m
+  ) => LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) Bool) -> ExampleT ctx m ()
+testDiagnostics = testDiagnostics' 60.0
 
-                              Expected: #{A.encode desired}
+testDiagnostics' :: (
+  LspContext ctx m
+  ) => Double -> LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) Bool) -> ExampleT ctx m ()
+testDiagnostics' timeoutSeconds lspSessionOptions cb = do
+  withLspSession lspSessionOptions $ \_homeDir -> do
+    lastSeenDiagsVar <- newTVarIO mempty
 
-                              Found: #{A.encode found}
-                             |]
-  where
-    found = getDiagnosticRanges' diagnostics
+    let watchDiagnostics = forever $ do
+          diags <- waitForDiagnostics
+          atomically $ writeTVar lastSeenDiagsVar diags
 
--- | Extract diagnostic ranges, codes, and messages
-getDiagnosticRanges' :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text), Text)]
-getDiagnosticRanges' = fmap (\x -> (x ^. range, x ^. code, x ^. LSP.message))
-
--- Diagnostics utilities re-exported from LSP.Test
-
--- | Filter diagnostics by severity
-filterDiagnosticsBySeverity :: DiagnosticSeverity -> [Diagnostic] -> [Diagnostic]
-filterDiagnosticsBySeverity severity = filter (\d -> d ^. LSP.severity == Just severity)
-
--- | Get error diagnostics only
-getErrorDiagnostics :: [Diagnostic] -> [Diagnostic]
-getErrorDiagnostics = filterDiagnosticsBySeverity DiagnosticSeverity_Error
-
--- | Get warning diagnostics only
-getWarningDiagnostics :: [Diagnostic] -> [Diagnostic]
-getWarningDiagnostics = filterDiagnosticsBySeverity DiagnosticSeverity_Warning
-
--- | Check if diagnostics contain any errors
-hasErrors :: [Diagnostic] -> Bool
-hasErrors = not . null . getErrorDiagnostics
-
--- | Check if diagnostics contain any warnings
-hasWarnings :: [Diagnostic] -> Bool
-hasWarnings = not . null . getWarningDiagnostics
+    withAsync watchDiagnostics $ \_ -> do
+      waitUntil timeoutSeconds $ do
+        flip fix [] $ \loop lastValue ->
+          cb lastValue >>= \case
+            True -> return ()
+            False -> do
+              newDiags <- atomically $ do
+                x <- readTVar lastSeenDiagsVar
+                when (x == lastValue) retrySTM
+                return x
+              loop newDiags
