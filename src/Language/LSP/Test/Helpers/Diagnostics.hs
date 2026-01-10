@@ -3,7 +3,7 @@ module Language.LSP.Test.Helpers.Diagnostics where
 
 import Control.Lens
 import Control.Monad
-import Data.Function (fix)
+import Data.Maybe
 import Data.String.Interpolate
 import Data.Text (Text)
 import Language.LSP.Protocol.Lens as LSP
@@ -37,36 +37,31 @@ testDiagnosticsLabelDesired :: (
   ) => LspSessionOptions -> String -> ([Diagnostic] -> Bool) -> SpecFree ctx m ()
 testDiagnosticsLabelDesired lspSessionOptions label' cb = it label' $
   testDiagnostics lspSessionOptions $ \diags ->
-    if | cb diags -> return True
+    if | cb diags -> return ()
        | otherwise -> expectationFailure [i|Got unexpected diagnostics: #{diags}|]
 
 testDiagnostics :: (
   LspContext ctx m
-  ) => LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) Bool) -> ExampleT ctx m ()
+  ) => LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
 testDiagnostics = testDiagnostics' 60.0
 
 testDiagnostics' :: (
   LspContext ctx m
-  ) => Double -> LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) Bool) -> ExampleT ctx m ()
-testDiagnostics' timeoutSeconds lspSessionOptions cb = do
+  ) => Double -> LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
+testDiagnostics' timeoutSeconds lspSessionOptions@(LspSessionOptions {..}) cb = do
   withLspSession lspSessionOptions $ \_homeDir -> do
-    lastSeenDiagsVar <- newTVarIO mempty
+    _ <- openDoc lspSessionOptionsInitialFileName (fromMaybe (LanguageKind_Custom "unknown") (lspConfigLanguageId lspSessionOptionsConfig))
+
+    diagsChan <- newTChanIO
 
     let watchDiagnostics = forever $ do
           diags <- waitForDiagnostics
-          atomically $ writeTVar lastSeenDiagsVar diags
+          info [i|waitForDiagnostics result: #{diags}|]
+          atomically $ writeTChan diagsChan diags
 
     withAsync watchDiagnostics $ \_ -> do
       waitUntil timeoutSeconds $ do
-        flip fix [] $ \loop lastValue ->
-          cb lastValue >>= \case
-            True -> return ()
-            False -> do
-              newDiags <- atomically $ do
-                x <- readTVar lastSeenDiagsVar
-                when (x == lastValue) retrySTM
-                return x
-              loop newDiags
+        atomically (readTChan diagsChan) >>= cb
 
 getDiagnosticRanges :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text))]
 getDiagnosticRanges = fmap (\x -> (x ^. range, x ^. code))
