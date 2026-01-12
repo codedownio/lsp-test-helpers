@@ -42,7 +42,7 @@ withLspSession (LspSessionOptions {..}) session = do
   -- Comment this and use openDoc' to simulate an unsaved document
   liftIO $ T.writeFile (homeDir </> lspSessionOptionsInitialFileName) lspSessionOptionsInitialCode
 
-  let sessionConfig = def {
+  let sessionConfig = lspSessionOptionsModifySessionConfig $ def {
         lspConfig = fromMaybe mempty (lspConfigInitializationOptions lspSessionOptionsConfig)
         , logStdErr = True
         , logMessages = True

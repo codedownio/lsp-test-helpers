@@ -14,6 +14,7 @@ import Data.Map (Map)
 import qualified Data.Set as S
 import Data.Text (Text)
 import Language.LSP.Protocol.Types
+import Language.LSP.Test (SessionConfig)
 import Language.LSP.Test.Helpers.Util.Aeson
 import Test.Sandwich as Sandwich
 
@@ -68,6 +69,8 @@ data LspSessionOptions = LspSessionOptions {
   , lspSessionOptionsPathEnvVar :: String
   -- | Read-only binds (bwrap setups only).
   , lspSessionOptionsReadOnlyBinds :: [FilePath]
+  -- | Read-only binds (bwrap setups only).
+  , lspSessionOptionsModifySessionConfig :: SessionConfig -> SessionConfig
 
   -- | Initial filename to open.
   , lspSessionOptionsInitialFileName :: FilePath
@@ -85,9 +88,12 @@ defaultLspSessionOptions config = LspSessionOptions {
   lspSessionOptionsConfig = config
   , lspSessionOptionsPathEnvVar = ""
   , lspSessionOptionsReadOnlyBinds = []
+  , lspSessionOptionsModifySessionConfig = id
+
   , lspSessionOptionsInitialFileName = "test.py"
   , lspSessionOptionsInitialLanguageKind = LanguageKind_Custom "unknown"
   , lspSessionOptionsInitialCode = ""
+
   , lspSessionOptionsExtraFiles = []
   }
 
