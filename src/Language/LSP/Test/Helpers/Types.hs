@@ -71,6 +71,8 @@ data LspSessionOptions = LspSessionOptions {
 
   -- | Initial filename to open.
   , lspSessionOptionsInitialFileName :: FilePath
+  -- | Initial filename to open.
+  , lspSessionOptionsInitialLanguageKind :: LanguageKind
   -- | Contents of the initial file.
   , lspSessionOptionsInitialCode :: Text
 
@@ -84,6 +86,7 @@ defaultLspSessionOptions config = LspSessionOptions {
   , lspSessionOptionsPathEnvVar = ""
   , lspSessionOptionsReadOnlyBinds = []
   , lspSessionOptionsInitialFileName = "test.py"
+  , lspSessionOptionsInitialLanguageKind = LanguageKind_Custom "unknown"
   , lspSessionOptionsInitialCode = ""
   , lspSessionOptionsExtraFiles = []
   }

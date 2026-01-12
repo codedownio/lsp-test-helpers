@@ -3,7 +3,6 @@ module Language.LSP.Test.Helpers.Diagnostics where
 
 import Control.Lens
 import Control.Monad
-import Data.Maybe
 import Data.String.Interpolate
 import Data.Text (Text)
 import Language.LSP.Protocol.Lens as LSP
@@ -34,23 +33,23 @@ import UnliftIO.STM
 
 testDiagnosticsLabelDesired :: (
   LspContext ctx m
-  ) => LspSessionOptions -> String -> ([Diagnostic] -> Bool) -> SpecFree ctx m ()
-testDiagnosticsLabelDesired lspSessionOptions label' cb = it label' $
-  testDiagnostics lspSessionOptions $ \diags ->
+  ) => LspSessionOptions -> LanguageKind -> String -> ([Diagnostic] -> Bool) -> SpecFree ctx m ()
+testDiagnosticsLabelDesired lspSessionOptions languageKind label' cb = it label' $
+  testDiagnostics lspSessionOptions languageKind $ \diags ->
     if | cb diags -> return ()
        | otherwise -> expectationFailure [i|Got unexpected diagnostics: #{diags}|]
 
 testDiagnostics :: (
   LspContext ctx m
-  ) => LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
+  ) => LspSessionOptions -> LanguageKind -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
 testDiagnostics = testDiagnostics' 60.0
 
 testDiagnostics' :: (
   LspContext ctx m
-  ) => Double -> LspSessionOptions -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
-testDiagnostics' timeoutSeconds lspSessionOptions@(LspSessionOptions {..}) cb = do
+  ) => Double -> LspSessionOptions -> LanguageKind -> ([Diagnostic] -> Session (ExampleT ctx m) ()) -> ExampleT ctx m ()
+testDiagnostics' timeoutSeconds lspSessionOptions@(LspSessionOptions {..}) languageKind cb = do
   withLspSession lspSessionOptions $ \_homeDir -> do
-    _ <- openDoc lspSessionOptionsInitialFileName (fromMaybe (LanguageKind_Custom "unknown") (lspConfigLanguageId lspSessionOptionsConfig))
+    _ <- openDoc lspSessionOptionsInitialFileName languageKind
 
     diagsChan <- newTChanIO
 
