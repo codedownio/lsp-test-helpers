@@ -35,28 +35,23 @@ ghc-options:
 - -fno-warn-name-shadowing
 
 dependencies:
-- base >= 4.7 && < 5
-- lsp-test >= 0.15
-- lsp-types >= 2.0
 - aeson
-- text
+- base >= 4.7 && < 5
 - bytestring
 - containers
-- directory
-- filepath
-- temporary
-- process
-- async
-- unliftio
-- unliftio-core
+- data-default
 - exceptions
-- mtl
-- monad-control
+- filepath
+- lens
+- lsp-test >= 0.15
+- lsp-types >= 2.0
 - monad-logger
 - sandwich >= 0.1
-- lens
-- data-default
 - string-interpolate
+- temporary
+- text
+- unliftio
+- unliftio-core
 
 library:
   source-dirs: src

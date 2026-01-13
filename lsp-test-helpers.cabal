@@ -50,21 +50,16 @@ library
   ghc-options: -Wall -Wunused-packages -fno-warn-name-shadowing
   build-depends:
       aeson
-    , async
     , base >=4.7 && <5
     , bytestring
     , containers
     , data-default
-    , directory
     , exceptions
     , filepath
     , lens
     , lsp-test >=0.15
     , lsp-types >=2.0
-    , monad-control
     , monad-logger
-    , mtl
-    , process
     , sandwich >=0.1
     , string-interpolate
     , temporary

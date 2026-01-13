@@ -6,7 +6,6 @@ module Language.LSP.Test.Helpers.Types where
 import Control.Applicative (Alternative)
 import Control.Monad.Catch (MonadCatch, MonadMask, MonadThrow)
 import Control.Monad.IO.Unlift
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson as A
 import Data.Aeson.TH as A
 import qualified Data.ByteString as B
@@ -51,8 +50,6 @@ type HasMaybeBubblewrap context = HasLabel context "maybeBubblewrap" (Maybe File
 
 type LspContext ctx m = (
   Alternative m
-  , MonadIO m
-  , MonadBaseControl IO m
   , MonadUnliftIO m
   , MonadCatch m
   , MonadThrow m
