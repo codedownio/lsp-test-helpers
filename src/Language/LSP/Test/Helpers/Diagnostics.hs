@@ -13,6 +13,7 @@ import Language.LSP.Test.Helpers.Types
 import Test.Sandwich as Sandwich
 import Test.Sandwich.Waits
 import UnliftIO.Async
+import UnliftIO.Exception
 import UnliftIO.STM
 
 
@@ -51,16 +52,20 @@ testDiagnostics' timeoutSeconds lspSessionOptions@(LspSessionOptions {..}) langu
   withLspSession lspSessionOptions $ \_homeDir -> do
     _ <- openDoc lspSessionOptionsInitialFileName languageKind
 
+    lastReceivedDiagnostics <- newTVarIO []
     diagsChan <- newTChanIO
 
     let watchDiagnostics = forever $ do
           diags <- waitForDiagnostics
           info [i|waitForDiagnostics result: #{diags}|]
-          atomically $ writeTChan diagsChan diags
+          atomically $ do
+            writeTVar lastReceivedDiagnostics diags
+            writeTChan diagsChan diags
 
-    withAsync watchDiagnostics $ \_ -> do
-      waitUntil timeoutSeconds $ do
-        atomically (readTChan diagsChan) >>= cb
+    withAsync watchDiagnostics $ \_ ->
+      flip onException (readTVarIO lastReceivedDiagnostics >>= \diags -> warn [i|Last received diagnostics: #{diags}|]) $
+      waitUntil timeoutSeconds $
+      atomically (readTChan diagsChan) >>= cb
 
 getDiagnosticRanges :: [Diagnostic] -> [(Range, Maybe (Int32 |? Text))]
 getDiagnosticRanges = fmap (\x -> (x ^. range, x ^. code))
