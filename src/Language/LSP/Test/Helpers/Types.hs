@@ -20,6 +20,9 @@ import Test.Sandwich as Sandwich
 
 data LanguageServerType = LanguageServerTypeTcp
                         | LanguageServerTypeStream
+                        -- | ark's LSP server lives inside a running Jupyter kernel
+                        -- and is reached via a bespoke comm handshake
+                        | LanguageServerTypeViaArkKernel
   deriving (Show, Eq)
 deriveJSON toSnakeC3 ''LanguageServerType
 

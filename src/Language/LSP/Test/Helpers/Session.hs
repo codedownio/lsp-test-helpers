@@ -62,6 +62,17 @@ withLspSession (LspSessionOptions {..}) session = do
                            , cwd = Just homeDir }
       return (proc cmd args, modifyCp)
     Just bwrapBinary -> do
+      -- Provide a `/bin/sh` in the sandbox. Language servers that embed R (e.g.
+      -- ark) load R's `utils` package, whose `.onLoad` runs `system()`/popen(),
+      -- and popen() always execs `/bin/sh` -- which the sandbox otherwise lacks,
+      -- crashing the server on startup. Point it at the shell that's already on
+      -- PATH (the basic path always includes bash, which ships `sh`).
+      shDirs <- filterM (\d -> doesFileExist (d </> "sh"))
+                        (fmap T.unpack $ T.splitOn ":" $ T.pack lspSessionOptionsPathEnvVar)
+      let shArgs = case shDirs of
+            (d:_) -> ["--symlink", d </> "sh", "/bin/sh"]
+            [] -> []
+
       let bwrapArgs = ["--tmpfs", "/tmp"
                       , "--bind", homeDir, homeDir
                       , "--clearenv"
@@ -73,6 +84,7 @@ withLspSession (LspSessionOptions {..}) session = do
                       , "--proc", "/proc"
                       , "--dev", "/dev"
                       ]
+                      <> shArgs
                       <> mconcat [["--ro-bind", x, x] | x <- lspSessionOptionsReadOnlyBinds]
                       <> mconcat [["--setenv", T.unpack n, T.unpack v]
                                  | (n, v) <- M.toList (fromMaybe mempty (lspConfigEnv lspSessionOptionsConfig))]
