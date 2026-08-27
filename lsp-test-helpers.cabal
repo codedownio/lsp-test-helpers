@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -22,6 +22,7 @@ library
   other-modules:
       Language.LSP.Test.Helpers.Diagnostics
       Language.LSP.Test.Helpers.Hover
+      Language.LSP.Test.Helpers.Readiness
       Language.LSP.Test.Helpers.Session
       Language.LSP.Test.Helpers.Types
       Language.LSP.Test.Helpers.Util

@@ -11,10 +11,13 @@ import Control.Monad.Logger
 import Data.String.Interpolate
 import Data.Text (Text)
 import qualified Data.Text as T
+import GHC.Stack
 import Language.LSP.Protocol.Lens as LSP hiding (hover)
 import Language.LSP.Protocol.Types
 import Language.LSP.Test
+import Language.LSP.Test.Helpers.Readiness
 import Test.Sandwich as Sandwich
+import Test.Sandwich.Waits
 
 
 -- | Extract all text from hover contents
@@ -67,3 +70,24 @@ getHoverOrException :: (
 getHoverOrException tdi pos = getHover tdi pos >>= \case
   Nothing -> expectationFailure [i|No hover returned.|]
   Just x -> return x
+
+-- | 'getHoverOrException', but first wait for the server to finish its
+-- background work and then keep asking until it answers.
+--
+-- Use this for positions whose hover depends on more than the open file --
+-- anything from a dependency or another module — since those come back empty
+-- until the server has indexed the project. See 'waitForServerReady' for what
+-- "ready" means and what it does not.
+getHoverEventually :: (
+  HasCallStack, MonadLoggerIO m, MonadThrow m, MonadUnliftIO m, Alternative m
+  ) => TextDocumentIdentifier -> Position -> Session m Hover
+getHoverEventually = getHoverEventually' defaultReadyTimeout
+
+-- | 'getHoverEventually' with an explicit timeout in seconds, covering the
+-- readiness wait and the retries separately.
+getHoverEventually' :: (
+  HasCallStack, MonadLoggerIO m, MonadThrow m, MonadUnliftIO m, Alternative m
+  ) => Double -> TextDocumentIdentifier -> Position -> Session m Hover
+getHoverEventually' timeoutSeconds tdi pos = do
+  waitForServerReady' timeoutSeconds defaultSettleSeconds
+  waitUntil timeoutSeconds $ getHoverOrException tdi pos
