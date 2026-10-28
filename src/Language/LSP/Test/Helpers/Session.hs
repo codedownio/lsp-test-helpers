@@ -99,7 +99,10 @@ withLspSession (LspSessionOptions {..}) session = do
   let caps = fullClientCapsForVersion (LSPVersion 3 16)
            & set (workspace . _Just . workspaceFolders) Nothing
            & set (workspace . _Just . configuration) Nothing
-           & set (workspace . _Just . didChangeWatchedFiles . _Just . dynamicRegistration) (Just False)
+           -- Claiming this is what makes rust-analyzer honor files.watcher=client. Deny it and it
+           -- watches every workspace file itself, which on macOS hangs in notify's FSEvents
+           -- backend and never finishes loading the workspace.
+           & set (workspace . _Just . didChangeWatchedFiles . _Just . dynamicRegistration) (Just True)
            & set (workspace . _Just . didChangeConfiguration . _Just . dynamicRegistration) (Just False)
            & set (textDocument . _Just . semanticTokens . _Just . dynamicRegistration) (Just False)
 
