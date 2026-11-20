@@ -71,6 +71,8 @@ data LspSessionOptions = LspSessionOptions {
   , lspSessionOptionsReadOnlyBinds :: [FilePath]
   -- | Read-only binds (bwrap setups only).
   , lspSessionOptionsModifySessionConfig :: SessionConfig -> SessionConfig
+  -- | Applied after the default client capabilities, e.g. to advertise workspace/configuration.
+  , lspSessionOptionsModifyClientCaps :: ClientCapabilities -> ClientCapabilities
 
   -- | Initial filename to open.
   , lspSessionOptionsInitialFileName :: FilePath
@@ -89,6 +91,7 @@ defaultLspSessionOptions config = LspSessionOptions {
   , lspSessionOptionsPathEnvVar = ""
   , lspSessionOptionsReadOnlyBinds = []
   , lspSessionOptionsModifySessionConfig = id
+  , lspSessionOptionsModifyClientCaps = id
 
   , lspSessionOptionsInitialFileName = "test.py"
   , lspSessionOptionsInitialLanguageKind = LanguageKind_Custom "unknown"
