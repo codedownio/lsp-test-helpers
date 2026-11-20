@@ -105,6 +105,7 @@ withLspSession (LspSessionOptions {..}) session = do
            & set (workspace . _Just . didChangeWatchedFiles . _Just . dynamicRegistration) (Just True)
            & set (workspace . _Just . didChangeConfiguration . _Just . dynamicRegistration) (Just False)
            & set (textDocument . _Just . semanticTokens . _Just . dynamicRegistration) (Just False)
+           & lspSessionOptionsModifyClientCaps
 
   runSessionWithConfigCustomProcess modifyCp sessionConfig cp caps homeDir $ session $ LspSessionInfo {
     lspSessionInfoHomeDir = homeDir
